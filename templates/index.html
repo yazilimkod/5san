@@ -1,1 +1,63 @@
-
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>5san — anonim imageboard</title>
+<style>
+:root{--bg:#0b0a10;--panel:#14121d;--line:#39304e;--text:#e8e1f4;--muted:#a69bb9;--purple:#a56bff;--green:#69e39a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -25%,#281743,transparent 48%),var(--bg);color:var(--text);font:15px/1.5 "Segoe UI",Arial}
+a{color:#c59aff;text-decoration:none}.wrap{max-width:1350px;margin:auto;padding:0 18px}
+header{background:#0c0b12ed;border-bottom:1px solid var(--line)}.top{height:80px;display:flex;align-items:center;justify-content:space-between}
+.logo{font:900 36px ui-monospace,monospace;color:#c49aff;letter-spacing:-2px}.sub,.muted{color:var(--muted);font-size:13px}
+nav{display:flex;gap:6px;overflow:auto;padding:12px 0;border-top:1px solid var(--line)}
+nav a{padding:8px 13px;border-radius:5px;white-space:nowrap}nav a.active,nav a:hover{background:#7842d8;color:white}
+.layout{display:grid;grid-template-columns:205px minmax(0,1fr) 220px;gap:15px;padding-top:18px;padding-bottom:35px}
+.box,.post{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;margin-bottom:13px}
+h1,h2,h3{margin:0 0 10px;color:#bd8aff;font-family:ui-monospace,monospace}
+h1{font-size:20px}h2{font-size:17px}
+input,textarea,select{width:100%;background:#09080f;color:var(--text);border:1px solid #514467;border-radius:5px;padding:10px;margin:4px 0;outline:none}
+textarea{min-height:105px;resize:vertical}
+.row{display:grid;grid-template-columns:145px 1fr;gap:8px}
+button{cursor:pointer;border:1px solid #59416f;background:#261b35;color:#eee4ff;border-radius:5px;padding:8px 12px}
+button.primary{background:linear-gradient(135deg,#a76aff,#7138d0);border:0;font-weight:800}
+.formfoot{display:flex;align-items:center;gap:10px;margin-top:8px}.formfoot button{margin-left:auto}
+.postmeta{color:var(--muted);font:12px ui-monospace,monospace;margin-bottom:6px}.nick{color:var(--green);font-weight:bold}
+.posttitle{font-weight:800;font-size:17px}.postbody{white-space:pre-wrap;overflow-wrap:anywhere;margin:6px 0}
+.actions{display:flex;gap:7px;margin-top:10px}.actions button{font-size:12px}
+.boardlist a{display:block;padding:5px}.boardlist a.active{color:var(--green)}
+.reply{border-left:2px solid #68429a;padding:6px 10px;margin:8px 0;color:#d9cfe5}
+.empty{text-align:center;padding:35px;color:var(--muted);border:1px dashed var(--line)}
+@media(max-width:950px){.layout{grid-template-columns:190px 1fr}.right{display:none}}
+@media(max-width:650px){.layout{grid-template-columns:1fr}.left{order:2}.row{grid-template-columns:1fr}.top{height:auto;padding:12px 0}}
+</style></head><body>
+<header><div class="wrap top"><div><div class="logo">♛ 5san</div><div class="sub">— özgür internet, sonsuz başlık —</div></div><div class="muted">BETA // ANONİM TAHTA</div></div>
+<div class="wrap"><nav>{% for b in boards %}<a class="{{'active' if active_board==b else ''}}" href="{{url_for('index',board=b)}}">{{ {'Genel':'/b/','Teknoloji':'/tech/','Oyun':'/games/','Mizah':'/meme/','Siyaset':'/siyaset/','Dizi':'/dizi/','Anime':'/anime/','Sohbet':'/soc/','Hikâye':'/story/','Diğer':'/diger/'}[b] }}</a>{% endfor %}</nav></div></header>
+<div class="wrap layout">
+<aside class="left"><section class="box"><h3>Tahtalar</h3><div class="boardlist"><a class="{{'active' if active_board=='Hepsi' else ''}}" href="/">/b/ — tümü</a>{% for b in boards %}<a class="{{'active' if active_board==b else ''}}" href="{{url_for('index',board=b)}}">{{b}}</a>{% endfor %}</div></section>
+<section class="box"><h3>Kurallar</h3><div class="muted">Küfür ve sert mizah serbest. Tehdit, hedef gösterme, kişisel bilgi paylaşımı ve spam yok.</div></section></aside>
+<main>
+<section class="box"><h1>Yeni Gönderi</h1><p class="muted">Hesap veya Gmail gerekmez. Nickname tamamen isteğe bağlıdır.</p>
+<form method="post" action="/post">
+<div class="row"><input name="nickname" maxlength="24" placeholder="Nickname (boş bırak = Anonim)"><select name="board">{% for b in boards %}<option value="{{b}}" {% if b=='Genel' %}selected{% endif %}>/{{b}}/</option>{% endfor %}</select></div>
+<input name="title" maxlength="100" placeholder="Başlık (isteğe bağlı)">
+<textarea name="body" maxlength="4000" required placeholder="Mesajını yaz..."></textarea>
+<div class="formfoot"><span class="muted">En fazla 4000 karakter · Görsel yükleme sonraki sürümde</span><button class="primary">Gönder ↗</button></div>
+</form></section>
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin:14px 2px"><h2>{{'Son gönderiler' if active_board=='Hepsi' else active_board+' gönderileri'}}</h2><form method="get"><input type="hidden" name="board" value="{{active_board}}"><select name="sort" onchange="this.form.submit()"><option value="new" {{'selected' if sort=='new' else ''}}>En yeni</option><option value="popular" {{'selected' if sort=='popular' else ''}}>En popüler</option><option value="old" {{'selected' if sort=='old' else ''}}>En eski</option></select></form></div>
+{% for p in posts %}<article class="post"><div class="postmeta"><span class="nick">{{p.nickname if p.nickname else 'Anonim'}}</span> · {{p.created_at|int}} · No.{{p.id}} · /{{p.board}}/</div>
+{% if p.title %}<div class="posttitle">{{p.title}}</div>{% endif %}<div class="postbody">{{p.body}}</div>
+<div class="actions"><button type="button" onclick="likePost({{p.id}},this)">▲ Beğen <span>{{p.likes_count}}</span></button><button type="button" onclick="document.getElementById('reply-{{p.id}}').hidden=!document.getElementById('reply-{{p.id}}').hidden">↳ Yanıtla</button><form method="post" action="/report/{{p.id}}" onsubmit="return confirm('Bu gönderiyi raporlamak istiyor musun?')"><button>⚑ Raporla</button></form></div>
+<form id="reply-{{p.id}}" hidden style="margin-top:9px" onsubmit="event.preventDefault();alert('Yanıt sistemi sonraki sürümde eklenecek.');"><input placeholder="Yanıt yaz (yakında)"></form>
+</article>{% else %}<div class="empty">Burada henüz gönderi yok. İlk başlığı sen aç!</div>{% endfor %}
+</main>
+<aside class="right"><section class="box"><h3>5san hakkında</h3><p class="muted">Anonim başlıklar, fikirler, oyunlar ve internet muhabbeti.</p></section><section class="box"><h3>Güvenlik</h3><p class="muted">Beğeniler tarayıcıya özel anonim kimlikle sınırlandırılır. Aynı tarayıcı aynı gönderiyi ikinci kez beğenemez.</p></section><section class="box"><h3>Durum</h3><p class="muted">SQLite veritabanı · Yerel sunucu · Gmail gerektirmez</p></section></aside>
+</div><footer class="wrap muted" style="text-align:center;padding:20px">5san · İlk çalışan sunucu sürümü</footer>
+<script>
+async function likePost(id,button){
+ button.disabled=true;
+ try{
+  const r=await fetch('/like/'+id,{method:'POST'});
+  const data=await r.json();
+  if(r.ok){button.querySelector('span').textContent=Number(button.querySelector('span').textContent)+1;button.textContent='✓ Beğendin ('+button.querySelector('span').textContent+')'}
+  else alert(data.error||'Bu gönderiyi zaten beğenmiş olabilirsin.');
+ }catch(e){alert('Sunucuya ulaşılamadı.')}
+}
+</script></body></html>
